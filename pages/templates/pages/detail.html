@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{ title }}
+{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-center">
+        <div class="col-10">
+            <div class="card custom-card-detail">
+                <div class="d-flex justify-content-around">
+                    <div class="col-6">
+                        <img src="{{ article.get_first_photo }}" class="card-img-top"
+                             style="width: 400px; height: 450px"
+                             alt="...">
+                    </div>
+                    <div class="col-6">
+                        <div id="carouselExample" class="carousel slide">
+                            <div class="carousel-inner">
+                                {% for photo in article.get_all_photo %}
+                                {% if forloop.counter == 1 %}
+                                <div class="carousel-item active">
+                                    <img src="{{ photo.image.url }}" style="width: 400px; height: 450px"
+                                         class="d-block w-100" alt="...">
+                                </div>
+                                {% else %}
+                                <div class="carousel-item">
+                                    <img src="{{ photo.image.url }}" style="width: 400px; height: 450px"
+                                         class="d-block w-100" alt="...">
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample"
+                                    data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#carouselExample"
+                                    data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h2 class="text-center text-dark card-title">{{ article.title }}</h2>
+                    <div class="d-flex justify-content-evenly">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item text-center custom-item-list">Автор: {{ article.author }}</li>
+                            <li class="list-group-item text-center custom-item-list">Создание статьи:
+                                {{ article.creation_datetime }}
+                            </li>
+                        </ul>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item text-center custom-item-list"><i class="bi bi-eye-fill"></i>>Кол-во просмотров:
+                                {{ article.quantity_views }}
+                            </li>
+                            <li class="list-group-item text-center custom-item-list">Изменения статьи:
+                                {{ article.updates_datetime }}
+                            </li>
+                        </ul>
+                    </div>
+                    {% if request.user.is_authenticated %}
+                    <a href="{% url 'edit_article_active' article.pk %}" class="btn btn-warning text-center my-5">Изменить
+                        статью</a>
+                    <a href="{% url 'delete_article_active' article.pk %}" class="btn btn-danger text-center my-5">Удалить
+                        статью</a>
+                    {% endif %}
+                    <div class="accordion accordion-flush" id="accordionFlushDetail">
+                        <div class="accordion-item ">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed accordion-custom" type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#detail-collapseOne" aria-expanded="false"
+                                        aria-controls="detail-collapseOne">
+                                    Описание статьи
+                                </button>
+                            </h2>
+                            <div id="detail-collapseOne" class="accordion-collapse collapse"
+                                 data-bs-parent="#accordionFlushDetail">
+                                <div class="accordion-body accordion-custom">
+                                    <p style="font-size: 16px">{{ article.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed accordion-custom" type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#detail-collapseThree" aria-expanded="false"
+                                        aria-controls="detail-collapseThree">
+                                    Комментарии
+                                </button>
+                            </h2>
+                            <div id="detail-collapseThree" class="accordion-collapse collapse"
+                                 data-bs-parent="#accordionFlushDetail">
+                                <div class="accordion-body accordion-custom">
+                                    {% if not request.user.is_authenticated %}
+                                    <form action="{% url 'save_comment_anonymous' article.pk %}" method="post"
+                                          class="comment-form">
+                                        {% csrf_token %}
+
+                                        {{ form_comment_anonymous.as_p }}
+
+                                        <button type="submit" class="btn btn-warning">Отправить</button>
+                                    </form>
+                                    {% else %}
+
+                                    <form action="{% url 'save_comment_authenticated' article.pk %}" method="post"
+                                          class="comment-form">
+                                        {% csrf_token %}
+
+                                        {{ form_comment_authenticated.as_p }}
+
+                                        <button type="submit" class="btn btn-warning">Отправить</button>
+                                    </form>
+                                    {% endif %}
+
+                                    {% for comment_an in comment_anonymous %}
+                                    <div class="card my-5">
+                                        <div class="card-header comment-header-custom">
+                                            {{ comment_an.name }}
+                                        </div>
+                                        <div class="card-body comment-body-custom">
+                                            <blockquote class="blockquote mb-0">
+                                                <p style="font-size: 16px">{{ comment_an.content }}</p>
+                                                <footer class="blockquote-footer" style="font-size: 14px">{{
+                                                    comment_an.datetime_create }}
+                                                </footer>
+                                            </blockquote>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+
+                                    {% for comment_an in comment_authenticated %}
+                                    <div class="card my-5">
+                                        <div class="card-header comment-header-custom">
+                                            {{ comment_an.user }}
+                                        </div>
+                                        <div class="card-body comment-body-custom">
+                                            <blockquote class="blockquote mb-0">
+                                                <p style="font-size: 16px">{{ comment_an.content }}</p>
+                                                <footer class="blockquote-footer" style="font-size: 14px">
+                                                    {{ comment_an.creation_time }}
+                                                </footer>
+                                            </blockquote>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex justify-content-center">
+        <div class="col-10">
+            <h2 class="text-center bg-white">
+                Похожие статьи
+            </h2>
+            {
+            <div class="d-flex justify-content-center gap-5 mt-5" style="flex-wrap: wrap;">
+                {% for article_s in articles %}
+                <div class="card custom-card h-100">
+                    <div style="margin: 0 auto;">
+                        <img src="{{ article_s.get_first_photo }}" class="card-img-top"
+                             style="width: 300px; height: 300px"
+                             alt="...">
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ article_s.title }}</h5>
+                        <p class="card-text">{{ article_s.card_description }}</p>
+                        <div class="d-flex justify-content-center">
+                            <a href="{% url 'detail_page' article_s.slug %}" class="btn btn-outline-danger">
+                                Перейти на статью
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
